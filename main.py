@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 async def set_commands(bot: Bot):
     commands = [
         BotCommand(command="/start", description="🚀 (пере)запустить бота"),
+        BotCommand(command="/contact", description="👤 наши контакты"),
         BotCommand(
             command="/cancel",
             description="🛑 отменить текущее действие"
