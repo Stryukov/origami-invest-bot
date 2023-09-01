@@ -1,11 +1,16 @@
-from aiogram import Bot, Dispatcher, types
-from aiogram.dispatcher.filters import Text, IDFilter
+import os
+from aiogram import Dispatcher, types
+from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from dataclasses import dataclass
 
+from misc.utils import SQLiter, Mailer
 from misc.texts import RU, BUTTONS, BACK_BUTTON, FORM_BUTTON, \
-    SOCIAL_BUTTON, REVIEW_BUTTON
+    SOCIAL_BUTTON
+
+
+db_worker = SQLiter(os.getenv('DB_NAME', 'db.sqlite3'))
 
 
 @dataclass
@@ -35,8 +40,8 @@ async def call_contact(call: types.CallbackQuery):
 
 
 async def welcome_text(message: types.Message):
-    # нужно собрать информацию о пользователе и положить в БД
-    # user = get_user_info(message)
+    user = get_user_info(message)
+    db_worker.add_user(user)
     keyboard = types.InlineKeyboardMarkup(row_width=1)
     keyboard.add(*BUTTONS)
     await message.answer(RU['start'], reply_markup=keyboard)
@@ -66,16 +71,25 @@ def get_user_info(message: types.Message):
 
 
 async def first_button(call: types.CallbackQuery):
-    await show_msg(call, RU['first_answer'], (FORM_BUTTON + SOCIAL_BUTTON + BACK_BUTTON))
+    await show_msg(
+        call, RU['first_answer'],
+        (FORM_BUTTON + SOCIAL_BUTTON + BACK_BUTTON)
+    )
+    user = get_user_info(call)
+    db_worker.add_action(user, 'Часто задаваемые вопросы')
 
 
 async def second_button(call: types.CallbackQuery):
     await Review.waiting.set()
     await show_msg(call, RU['second_answer'], (BACK_BUTTON))
+    user = get_user_info(call)
+    db_worker.add_action(user, 'Хочу оставить отзыв')
 
 
 async def third_button(call: types.CallbackQuery):
     await show_msg(call, RU['third_answer'], (FORM_BUTTON + BACK_BUTTON))
+    user = get_user_info(call)
+    db_worker.add_action(user, 'Отправить анкету')
 
 
 async def show_msg(call: types.CallbackQuery, text, buttons):
@@ -91,9 +105,13 @@ async def show_msg(call: types.CallbackQuery, text, buttons):
 
 
 async def get_review(message: types.Message, state: FSMContext):
-    # send review
     await message.answer(RU['thanx'])
     await state.finish()
+    user = get_user_info(message)
+    user_info = f'\n\nПользователь: \
+        {user.fullname} @{user.uname} {user.user_id}'
+    mailer_worker = Mailer()
+    mailer_worker.send_notify(message.text + user_info)
     await welcome_text(message)
 
 
