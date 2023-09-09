@@ -3,7 +3,7 @@ from aiogram import types
 
 RU = {
     "start": "Здравствуйте! Это Оригами-бот, я помогу вам сориентироваться по всем вопросам, связанным с нашей деятельностью.",
-    "contact": "Читайте нас на канале: @origami_invest \nПишите нам: origami_invest@mail.ru",
+    "contact": "Мы в телеграме: @origami_invest \nМы в инстаграме: https://www.instagram.com/origami_invest \nПишите нам: origami_invest@mail.ru",
     "back": "↩️ Вернуться назад",
     "form": "Заполнить анкету",
     "social": "Наши соцсети и контакты",
