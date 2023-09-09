@@ -3,10 +3,8 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import os
-import logging
-
-
-logger = logging.getLogger(__name__)
+import requests
+import json
 
 
 class SQLiter:
@@ -18,8 +16,10 @@ class SQLiter:
     def add_user(self, user):
         with self.connection:
             self.cursor.execute(
-                f"INSERT OR IGNORE INTO users (tg_id, tg_username, tg_fullname, tg_is_bot, tg_locale) "
-                f"VALUES ('{user.user_id}','{user.uname}','{user.fullname}','{user.is_bot}','{user.locale}')"
+                f"INSERT OR IGNORE INTO users "
+                "(tg_id, tg_username, tg_fullname, tg_is_bot, tg_locale) "
+                f"VALUES ('{user.user_id}','{user.uname}',"
+                f"'{user.fullname}','{user.is_bot}','{user.locale}')"
             )
         self.connection.commit()
 
@@ -41,10 +41,22 @@ class SQLiter:
 class Statisticer:
 
     def __init__(self) -> None:
-        pass
+        self.api_key = os.getenv('METRIC_API_KEY')
+        self.url = os.getenv('METRIC_URL')
 
-    def send_log(self):
-        pass
+    def send_log(self, user_id: int, event: str, properties: dict) -> None:
+        """
+        Send metrics to amplitude.com for agregate information.
+        """
+        payload = {"api_key": self.api_key, "events": [
+            {
+                "user_id": user_id,
+                "event_type": event,
+                "user_properties": properties,
+                "country": None,
+            }
+        ]}
+        requests.post(self.url, data=json.dumps(payload))
 
 
 class Mailer:
@@ -57,7 +69,7 @@ class Mailer:
         self.receiver = os.getenv('MAIL_RECEIVER', 'receiver@mail.com')
         self.subject = os.getenv('MAIL_SUBJECT', 'Origami bot notice')
 
-    def send_notify(self, message):
+    def send_notify(self, message) -> dict:
         msg = MIMEMultipart()
         msg['From'] = self.sender
         msg['To'] = self.receiver
@@ -70,9 +82,15 @@ class Mailer:
             server.send_message(msg)
             server.quit()
 
-            logger.info("Email sent successfully")
+            return {
+                'status': True,
+                'msg': 'Email sent successfully',
+            }
         except Exception as e:
-            logger.error(f"An error occurred while sending the email: {str(e)}")
+            return {
+                'status': False,
+                'msg': f'An error occurred while sending the email: {str(e)}'
+            }
 
 
 if __name__ == '__main__':

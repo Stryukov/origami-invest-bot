@@ -3,14 +3,15 @@ from aiogram import Dispatcher, types
 from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 
-from misc.utils import SQLiter, Mailer
+from misc.utils import SQLiter, Mailer, Statisticer
 from misc.texts import RU, BUTTONS, BACK_BUTTON, FORM_BUTTON, \
     SOCIAL_BUTTON
 
 
 db_worker = SQLiter(os.getenv('DB_NAME', 'db.sqlite3'))
+metrics_worker = Statisticer()
 
 
 @dataclass
@@ -28,6 +29,12 @@ class Review(StatesGroup):
 
 async def cmd_start(message: types.Message):
     await welcome_text(message)
+    user = get_user_info(message)
+    metrics_worker.send_log(
+        user.user_id,
+        'start bot',
+        asdict(user),
+    )
 
 
 async def cmd_contact(message: types.Message):
@@ -36,6 +43,12 @@ async def cmd_contact(message: types.Message):
 
 async def call_contact(call: types.CallbackQuery):
     await cmd_contact(call.message)
+    user = get_user_info(call)
+    metrics_worker.send_log(
+        user.user_id,
+        'get contacts',
+        asdict(user),
+    )
     await call.answer()
 
 
@@ -66,7 +79,7 @@ def get_user_info(message: types.Message):
         uname=message.from_user.username,
         fullname=message.from_user.full_name,
         is_bot=message.from_user.is_bot,
-        locale=message.from_user.locale
+        locale=message.from_user.language_code
     )
 
 
@@ -77,6 +90,11 @@ async def first_button(call: types.CallbackQuery):
     )
     user = get_user_info(call)
     db_worker.add_action(user, 'Часто задаваемые вопросы')
+    metrics_worker.send_log(
+        user.user_id,
+        'faq',
+        asdict(user),
+    )
 
 
 async def second_button(call: types.CallbackQuery):
@@ -84,12 +102,22 @@ async def second_button(call: types.CallbackQuery):
     await show_msg(call, RU['second_answer'], (BACK_BUTTON))
     user = get_user_info(call)
     db_worker.add_action(user, 'Хочу оставить отзыв')
+    metrics_worker.send_log(
+        user.user_id,
+        'review',
+        asdict(user),
+    )
 
 
 async def third_button(call: types.CallbackQuery):
     await show_msg(call, RU['third_answer'], (FORM_BUTTON + BACK_BUTTON))
     user = get_user_info(call)
     db_worker.add_action(user, 'Отправить анкету')
+    metrics_worker.send_log(
+        user.user_id,
+        'request from',
+        asdict(user),
+    )
 
 
 async def show_msg(call: types.CallbackQuery, text, buttons):
@@ -111,7 +139,14 @@ async def get_review(message: types.Message, state: FSMContext):
     user_info = f'\n\nПользователь: \
         {user.fullname} @{user.uname} {user.user_id}'
     mailer_worker = Mailer()
-    mailer_worker.send_notify(message.text + user_info)
+    result = mailer_worker.send_notify(message.text + user_info)
+    if not result['status']:
+        await message.answer(RU['err_send_msg'])
+        await message.bot.send_message(
+            os.getenv('TG_ADMIN_BOT'),
+            f"{RU['admin_notify']} {result['msg']} "
+            f"{user_info} {RU['text_review']} {message.text}"
+        )
     await welcome_text(message)
 
 
