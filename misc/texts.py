@@ -35,10 +35,6 @@ BUTTONS = [
             text=RU['second_button'],
             callback_data="second_button",
         ),
-    types.InlineKeyboardButton(
-            text=RU['third_button'],
-            callback_data="third_button",
-        )
 ]
 
 BACK_BUTTON = [

@@ -109,17 +109,6 @@ async def second_button(call: types.CallbackQuery):
     )
 
 
-async def third_button(call: types.CallbackQuery):
-    await show_msg(call, RU['third_answer'], (FORM_BUTTON + BACK_BUTTON))
-    user = get_user_info(call)
-    db_worker.add_action(user, 'Отправить анкету')
-    metrics_worker.send_log(
-        user.user_id,
-        'request from',
-        asdict(user),
-    )
-
-
 async def show_msg(call: types.CallbackQuery, text, buttons):
     keyboard = types.InlineKeyboardMarkup(row_width=1)
     keyboard.add(*buttons)
@@ -162,9 +151,6 @@ def register_handlers_common(dp: Dispatcher):
     )
     dp.register_callback_query_handler(
         second_button, Text(startswith="second_button"), state="*"
-    )
-    dp.register_callback_query_handler(
-        third_button, Text(startswith="third_button"), state="*"
     )
     dp.register_callback_query_handler(
         begin, Text(startswith="welcome"), state="*"
