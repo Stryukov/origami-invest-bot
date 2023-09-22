@@ -80,7 +80,6 @@ class Mailer:
             server = smtplib.SMTP_SSL(self.server, self.port)
             server.login(self.sender, self.password)
             server.send_message(msg)
-            server.quit()
 
             return {
                 'status': True,
@@ -91,6 +90,8 @@ class Mailer:
                 'status': False,
                 'msg': f'An error occurred while sending the email: {str(e)}'
             }
+        finally:
+            server.quit()
 
 
 if __name__ == '__main__':
