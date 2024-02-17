@@ -1,8 +1,7 @@
 import os
-from aiogram import Dispatcher, types
-from aiogram.dispatcher.filters import Text
-from aiogram.dispatcher import FSMContext
-from aiogram.dispatcher.filters.state import State, StatesGroup
+from aiogram import F, Dispatcher, types
+from aiogram.fsm.context import FSMContext
+from aiogram.filters.state import State, StatesGroup
 from dataclasses import dataclass, asdict
 
 from misc.utils import SQLiter, Mailer, Statisticer
@@ -144,18 +143,18 @@ def register_handlers_common(dp: Dispatcher):
     dp.register_message_handler(cmd_contact, commands="contact", state="*")
     dp.register_message_handler(cmd_cancel, commands="cancel", state="*")
     dp.register_message_handler(
-        cmd_cancel, Text(equals="отмена", ignore_case=True), state="*"
+        cmd_cancel, F.text(equals="отмена", ignore_case=True), state="*"
     )
     dp.register_callback_query_handler(
-        first_button, Text(startswith="first_button"), state="*"
+        first_button, F.text(startswith="first_button"), state="*"
     )
     dp.register_callback_query_handler(
-        second_button, Text(startswith="second_button"), state="*"
+        second_button, F.text(startswith="second_button"), state="*"
     )
     dp.register_callback_query_handler(
-        begin, Text(startswith="welcome"), state="*"
+        begin, F.text(startswith="welcome"), state="*"
     )
     dp.register_callback_query_handler(
-        call_contact, Text(startswith="social"), state="*"
+        call_contact, F.text(startswith="social"), state="*"
     )
     dp.register_message_handler(get_review, state=Review.waiting)
