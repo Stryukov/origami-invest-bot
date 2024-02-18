@@ -9,6 +9,15 @@ from misc.utils import SQLiter, Mailer, Statisticer
 from misc.texts import RU, BUTTONS, BACK_BUTTON, FORM_BUTTON, \
     SOCIAL_BUTTON
 
+HOLLY_WORDS = [
+    'holly',
+    'holy',
+    'holi',
+    'holli',
+    'холли',
+    'холи',
+]
+HOLLY_DOC = os.getenv("HOLLY_DOC")
 
 db_worker = SQLiter(os.getenv('DB_NAME', 'db.sqlite3'))
 metrics_worker = Statisticer()
@@ -139,6 +148,17 @@ async def get_review(message: types.Message, state: FSMContext):
     await welcome_text(message)
 
 
+async def cmd_holly(message: types.Message):
+    if HOLLY_DOC:
+        await message.answer_document(HOLLY_DOC)
+    user = get_user_info(message)
+    metrics_worker.send_log(
+        user.user_id,
+        'holly',
+        asdict(user),
+    )
+
+
 def register_handlers_common(dp: Dispatcher):
     dp.register_message_handler(cmd_start, commands="start", state="*")
     dp.register_message_handler(cmd_contact, commands="contact", state="*")
@@ -159,3 +179,8 @@ def register_handlers_common(dp: Dispatcher):
         call_contact, Text(startswith="social"), state="*"
     )
     dp.register_message_handler(get_review, state=Review.waiting)
+    dp.register_message_handler(
+        cmd_holly,
+        lambda message: message.text.lower().strip() in HOLLY_WORDS,
+        state="*"
+    )
