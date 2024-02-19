@@ -1,3 +1,4 @@
+import os
 from aiogram import types
 
 
@@ -34,23 +35,32 @@ START_BUTTONS = [
     ]
 ]
 
-BACK_BUTTON = [
-    types.InlineKeyboardButton(
-            text=RU['back_button'],
-            callback_data="welcome",
-        )
-]
-
-FORM_BUTTON = [
-    types.InlineKeyboardButton(
+FAQ_BUTTONS = [
+    [
+        types.InlineKeyboardButton(
             text=RU['form'],
-            url='https://forms.gle/8Lu2a9Pt7YgGZq8o9',
-        )
-]
-
-SOCIAL_BUTTON = [
-    types.InlineKeyboardButton(
+            url=os.getenv('FORM_URL'),
+        ),
+    ],
+    [
+        types.InlineKeyboardButton(
             text=RU['social'],
             callback_data="social",
-        )
+        ),
+    ],
+    [
+        types.InlineKeyboardButton(
+            text=RU['back_button'],
+            callback_data="welcome",
+        ),
+    ]
+]
+
+REVIEW_BUTTONS = [
+    [
+        types.InlineKeyboardButton(
+                text=RU['back_button'],
+                callback_data="welcome",
+            )
+    ]
 ]
