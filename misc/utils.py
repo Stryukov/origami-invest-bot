@@ -5,6 +5,7 @@ from email.mime.text import MIMEText
 import os
 import requests
 import json
+from aiogram import types
 
 
 class SQLiter:
@@ -92,6 +93,16 @@ class Mailer:
             }
         finally:
             server.quit()
+
+
+def get_user_info(message: types.Message):
+    return {
+        "user_id": message.from_user.id,
+        "uname": message.from_user.username,
+        "fullname": message.from_user.full_name,
+        "is_bot": message.from_user.is_bot,
+        "locale": message.from_user.language_code,
+    }
 
 
 if __name__ == '__main__':
