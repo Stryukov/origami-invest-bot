@@ -1,13 +1,32 @@
 # Origami invest bot
 
-Описание будет чуть позднее, когда я получу описание
+Telegram бот для ответа на частые вопросы и получения обратной связи. 
 
+Возможности бота: 
+- отправка FAQ
+- получение обратной связи от клиентов
 
 ## Environment Variables
 
 Нужно получить токен от BotFather и записать в файл .env
 
-`TG_TOKEN`
+`TG_TOKEN=<secret telegram token>`
+
+`TG_ADMIN_BOT=<id admin>`
+
+`DB_NAME=path/to/database.sqlite3`
+
+`MAIL_SERVER=smtp.server.com`
+
+`MAIL_PORT=465`
+
+`MAIL_SENDER=sender@server.com`
+
+`MAIL_SENDER_PWD=password`
+
+`MAIL_RECEIVER=receiver@server.com`
+
+`MAIL_SUBJECT='Уведомление от Origami bot'`
 
 
 ## Run Locally
@@ -15,7 +34,7 @@
 Клонируйте проект
 
 ```bash
-  git clone https://link-to-project
+  git clone git@github.com:Stryukov/origami-invest-bot.git
 ```
 
 Переходи в каталог проекта
@@ -31,13 +50,13 @@
 ```
 
 
-Установи зависимости backend и frontend
+Установи зависимости
 
 ```bash
   pip install -r requirements.txt
 ```
 
-Запусти backend
+Запусти бота
 
 ```bash
   python3 main.py
