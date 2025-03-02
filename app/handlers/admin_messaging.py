@@ -29,7 +29,8 @@ def setup_admin_messaging_handlers(dp: Dispatcher, bot: Bot, db: SQLiter, admin_
             f"📩 <b>Новое сообщение в очереди!</b>\n\n"
             f"От пользователя:\n"
             f"{user_info}\n\n"
-            f"<i>Чтобы посмотреть новове сообщение отправьте /next </i>\n\n"
+            f"💬 {message.text}\n\n"
+            f"<i>Чтобы ответить или пропустить новое сообщение отправьте /next </i>\n\n"
             f"📊 Всего необработанных сообщений: <b>{pending_count}</b>"
         )
 
@@ -59,10 +60,28 @@ def setup_admin_messaging_handlers(dp: Dispatcher, bot: Bot, db: SQLiter, admin_
                 f"{user_info}\n\n"
                 f"💬 {text}\n\n"
 
-                f"<i>Чтобы отправить ответ ответьте на это сообщение.</i>",
+                f"<i>Чтобы отправить ответ ответьте на это сообщение.</i>"
+                f"<i>Чтобы удалить сообщение без ответа, отправьте /skip</i>",
                 parse_mode=ParseMode.HTML
             )
             db.update_message_status(msg_id, 'in_progress')
+        else:
+            await message.reply("✅ Очередь пуста.")
+
+    @dp.message(lambda message: message.from_user.id == admin_id and message.text == "/skip")
+    async def skip_message(message: types.Message):
+        """Позволяет администратору пропустить сообщение без ответа"""
+        msg = db.get_next_message()
+        if msg:
+            msg_id = msg[0]
+            db.update_message_status(msg_id, 'ignored')
+            pending_count = db.count_pending_messages()
+
+            await message.reply(
+                f"🗑 Сообщение №{msg_id} удалено из очереди.\n"
+                f"📊 Осталось необработанных сообщений: <b>{pending_count}</b>",
+                parse_mode=ParseMode.HTML
+            )
         else:
             await message.reply("✅ Очередь пуста.")
 
