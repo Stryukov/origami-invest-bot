@@ -9,31 +9,58 @@ from aiogram import types
 
 
 class SQLiter:
-
     def __init__(self, database) -> None:
-        self.connection = sqlite3.connect(database)
+        self.connection = sqlite3.connect(database, check_same_thread=False)
         self.cursor = self.connection.cursor()
+        self.init_db()
 
-    def add_user(self, user):
+    def init_db(self):
+        """Создаёт таблицы, если их нет"""
+        with self.connection:
+            self.cursor.execute("""
+                CREATE TABLE IF NOT EXISTS messages (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER NOT NULL,
+                    username TEXT,
+                    fullname TEXT,
+                    message TEXT NOT NULL,
+                    status TEXT DEFAULT 'pending'
+                )
+            """)
+        self.connection.commit()
+
+    def add_message(self, user_id, username, fullname, message):
+        """Добавляет сообщение пользователя в БД"""
         with self.connection:
             self.cursor.execute(
-                f"INSERT OR IGNORE INTO users "
-                "(tg_id, tg_username, tg_fullname, tg_is_bot, tg_locale) "
-                f"VALUES ('{user.user_id}','{user.uname}',"
-                f"'{user.fullname}','{user.is_bot}','{user.locale}')"
+                "INSERT INTO messages (user_id, username, fullname, message) VALUES (?, ?, ?, ?)",
+                (user_id, username, fullname, message)
             )
         self.connection.commit()
 
-    def add_action(self, user, action):
+    def get_next_message(self):
+        """Получает следующее необработанное сообщение"""
         with self.connection:
-            user_id = self.cursor.execute(
-                f"select id from users where tg_id = '{user.user_id}'"
+            message = self.cursor.execute(
+                "SELECT id, user_id, username, fullname, message FROM messages WHERE status IN ('pending', 'in_progress') LIMIT 1"
             ).fetchone()
+        return message
+
+    def update_message_status(self, message_id, status):
+        """Обновляет статус сообщения"""
+        with self.connection:
             self.cursor.execute(
-                f"INSERT OR IGNORE INTO actions (user_id, action) "
-                f"VALUES ('{user_id[0]}','{action}')"
+                "UPDATE messages SET status = ? WHERE id = ?", (status, message_id)
             )
         self.connection.commit()
+
+    def count_pending_messages(self):
+        """Подсчитывает количество сообщений со статусом 'pending'"""
+        with self.connection:
+            count = self.cursor.execute(
+                "SELECT COUNT(*) FROM messages WHERE status IN ('pending', 'in_progress')"
+            ).fetchone()[0]
+        return count
 
     def close(self):
         self.connection.close()
@@ -78,9 +105,9 @@ class Mailer:
         msg.attach(MIMEText(message, 'plain'))
 
         try:
-            server = smtplib.SMTP_SSL(self.server, self.port)
-            server.login(self.sender, self.password)
-            server.send_message(msg)
+            srv = smtplib.SMTP_SSL(self.server, self.port)
+            srv.login(self.sender, self.password)
+            srv.send_message(msg)
 
             return {
                 'status': True,
@@ -92,7 +119,7 @@ class Mailer:
                 'msg': f'An error occurred while sending the email: {str(e)}'
             }
         finally:
-            server.quit()
+            srv.quit()
 
 
 def get_user_info(message: types.Message):
