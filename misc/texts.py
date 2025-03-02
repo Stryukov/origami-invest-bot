@@ -3,7 +3,7 @@ from aiogram import types
 
 
 RU = {
-    "start": "Здравствуйте! Это Оригами-бот, я помогу вам сориентироваться по всем вопросам, связанным с нашей деятельностью.",
+    "start": "Здравствуйте! Это Оригами-бот, я помогу вам сориентироваться по всем вопросам, связанным с нашей деятельностью.\n\nЕсли хотите связаться с администратором, то просто отправьте сообщение боту.",
     "contact": "Мы в телеграме: @origami_invest \nМы в инстаграме: https://www.instagram.com/origami_invest \nПишите нам: origami_invest@mail.ru",
     "back_button": "↩️ Вернуться назад",
     "form": "Заполнить анкету",
@@ -28,11 +28,11 @@ START_BUTTONS = [
             text=RU['faq_button'], callback_data="faq_button",
         ),
     ],
-    [
-        types.InlineKeyboardButton(
-            text=RU['review_button'], callback_data="review_button"
-        )
-    ]
+    # [
+    #     types.InlineKeyboardButton(
+    #         text=RU['review_button'], callback_data="review_button"
+    #     )
+    # ]
 ]
 
 FAQ_BUTTONS = [
