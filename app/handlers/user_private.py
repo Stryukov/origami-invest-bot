@@ -70,6 +70,22 @@ async def get_faq_callback(callback: types.CallbackQuery):
     )
 
 
+@user_private_router.callback_query(F.data == "guide_button")
+async def get_guide_callback(callback: types.CallbackQuery):
+    await callback.message.answer(
+        RU['guide_answer'],
+        reply_markup=reply.feedback_kb
+    )
+    await callback.message.delete()
+    await callback.answer()
+    user = get_user_info(callback)
+    metrics_worker.send_log(
+        user["user_id"],
+        'guide',
+        user,
+    )
+
+
 @user_private_router.callback_query(F.data == "review_button")
 async def get_feedback_callback(callback: types.CallbackQuery, state: FSMContext):
     await state.set_state(Review.waiting_text)
